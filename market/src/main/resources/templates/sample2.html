@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${product.name}">상품 상세 페이지 - Market Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.346.0/lucide.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; color: #111; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-white">
+
+<!-- Header Fragment (Common) -->
+<header class="sticky top-0 z-50 w-full bg-white border-b border-gray-200">
+    <div class="bg-[#f8f8f8] py-2 px-4 flex justify-end gap-4 text-[11px] text-[#666]">
+        <button class="hover:underline">즐겨찾기</button>
+        <button class="hover:underline">입점신청</button>
+        <div class="flex gap-2 ml-auto">
+            <span th:text="${user.name} + ' 님'">이*진 님</span>
+            <button class="hover:underline">로그아웃</button>
+            <span class="text-gray-300">|</span>
+            <button class="hover:underline">고객센터</button>
+        </div>
+    </div>
+    <div class="max-w-[1100px] mx-auto px-4 py-4 flex items-center gap-6">
+        <div class="text-[#0073e9] font-bold text-3xl italic tracking-tighter flex items-center cursor-pointer">
+            <span class="text-[#0073e9]">cou</span><span class="text-[#ff1c1c]">pang</span>
+        </div>
+        <button class="flex flex-col items-center justify-center bg-[#0073e9] text-white p-2 rounded-sm w-[76px] gap-1 shrink-0">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+            <span class="text-[11px] font-bold">카테고리</span>
+        </button>
+        <div class="flex-1 flex max-w-[600px] items-center border-2 border-[#0073e9] rounded-sm overflow-hidden h-10">
+            <div class="px-3 flex items-center gap-1 text-[13px] text-[#444] border-r border-gray-200 h-full">전체</div>
+            <input type="text" placeholder="찾고 싶은 상품을 검색해보세요!" class="flex-1 px-4 text-[14px] outline-none h-full">
+            <i data-lucide="search" class="w-6 h-6 text-[#0073e9] mx-2"></i>
+        </div>
+        <div class="flex items-center gap-6">
+            <div class="flex flex-col items-center gap-1 text-[#444] cursor-pointer">
+                <i data-lucide="user" class="w-7 h-7"></i>
+                <span class="text-[11px] font-medium">마이쿠팡</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 text-[#444] cursor-pointer relative">
+                <i data-lucide="shopping-cart" class="w-7 h-7"></i>
+                <span class="absolute -top-1 -right-1 bg-[#0073e9] text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold" th:text="${cartCount}">3</span>
+                <span class="text-[11px] font-medium">장바구니</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-[1100px] mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-[auto_1fr_250px] gap-8">
+    <!-- Thumbnail columns -->
+    <div class="hidden md:flex flex-col gap-1">
+        <div th:each="img, iter : ${product.images}"
+             class="w-[50px] h-[50px] border border-gray-200 cursor-pointer hover:border-[#0073e9] transition-all">
+            <img th:src="${img}" class="w-full h-full object-cover">
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div>
+            <img th:src="${product.mainImage}" alt="Main product" class="w-full aspect-square object-cover border border-gray-100">
+        </div>
+        <div class="flex flex-col gap-4">
+            <div class="flex items-center gap-1 text-[13px] text-[#0073e9] font-medium">
+                <span th:text="${product.brand}">필립스</span> &gt; <span class="text-[#666] ml-1">브랜드샵</span>
+            </div>
+            <h1 class="text-xl font-bold text-[#111]" th:text="${product.name}">필립스 원턴 하이브리드 스팀다리미</h1>
+
+            <div class="border-t border-b border-gray-100 py-4 flex flex-col gap-1">
+                <div class="flex items-baseline gap-1 text-[13px] text-[#888] line-through">
+                    <span th:text="${product.discountRate} + '%'">2%</span>
+                    <span th:text="${#numbers.formatDecimal(product.originalPrice, 0, 'COMMA', 0, 'POINT')} + '원'">289,000원</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl font-bold text-[#ae0000]" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '원'">281,000원</span>
+                    <div class="bg-[#0073e9] flex items-center px-1 py-[2px] rounded-sm gap-1">
+                        <span class="text-white text-[10px] font-bold">🚀로켓</span><span class="text-[#0ed145] text-[10px] font-bold">내일</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="py-2 flex flex-col gap-3">
+                <div class="flex items-center gap-1">
+                    <div class="text-[14px] font-bold text-[#00891a]">이 상품은 <span class="underline">내일 도착, 무료배송</span></div>
+                </div>
+                <div class="bg-[#fdfdfd] border border-gray-100 p-4 rounded-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-[#f2f2f2] text-[#444] text-[10px] px-1 py-[2px] rounded-sm border border-gray-300 font-bold" th:text="${product.deliveryDate}">내일(화) 4/21 도착 보장</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-4 h-12">
+                <button class="flex-1 border border-[#0073e9] text-[#0073e9] font-bold rounded-sm">장바구니 담기</button>
+                <button class="flex-1 bg-[#0073e9] text-white font-bold rounded-sm shadow-sm">바로구매 &gt;</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

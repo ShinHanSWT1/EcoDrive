@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상품 목록 - Market Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.346.0/lucide.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; color: #111; }
+    </style>
+</head>
+<body class="bg-white">
+<header class="sticky top-0 z-50 w-full bg-white border-b border-gray-200">
+    <div class="bg-[#f8f8f8] py-2 px-4 flex justify-end gap-4 text-[11px] text-[#666]">
+        <button class="hover:underline">즐겨찾기</button>
+        <button class="hover:underline">입점신청</button>
+        <div class="flex gap-2 ml-auto">
+            <span>coopang 고객님</span>
+            <button class="hover:underline">로그아웃</button>
+            <span class="text-gray-300">|</span>
+            <button class="hover:underline">고객센터</button>
+        </div>
+    </div>
+    <div class="max-w-[1100px] mx-auto px-4 py-4 flex items-center gap-6">
+        <a href="/products" class="text-[#0073e9] font-bold text-3xl italic tracking-tighter flex items-center cursor-pointer">
+            <span class="text-[#0073e9]">coo</span><span class="text-[#ff1c1c]">pang</span>
+        </a>
+        <button class="flex flex-col items-center justify-center bg-[#0073e9] text-white p-2 rounded-sm w-[76px] gap-1 shrink-0">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+            <span class="text-[11px] font-bold">카테고리</span>
+        </button>
+        <div class="flex-1 flex max-w-[600px] items-center border-2 border-[#0073e9] rounded-sm overflow-hidden h-10">
+            <div class="px-3 flex items-center gap-1 text-[13px] text-[#444] border-r border-gray-200 h-full">전체</div>
+            <input type="text" placeholder="원하는 상품을 검색해보세요" class="flex-1 px-4 text-[14px] outline-none h-full">
+            <i data-lucide="search" class="w-6 h-6 text-[#0073e9] mx-2"></i>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-[1100px] mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">상품 목록</h1>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div th:each="product : ${products}" class="border border-gray-200 rounded-sm overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+            <img th:src="${product.imageUrl}" th:alt="${product.name}" class="w-full h-56 object-cover">
+            <div class="p-4 flex flex-col gap-2">
+                <p class="text-[15px] font-bold text-[#222]" th:text="${product.name}">상품명</p>
+                <p class="text-[13px] text-[#666] min-h-[40px]" th:text="${product.description}">상품 설명</p>
+                <p class="text-xl font-extrabold text-[#ae0000]" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '원'">99,000원</p>
+                <a th:href="@{/checkout/{id}(id=${product.id})}" class="mt-2 w-full text-center bg-[#0073e9] text-white font-bold py-3 rounded-sm hover:bg-blue-700 transition-colors">
+                    구매하기
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

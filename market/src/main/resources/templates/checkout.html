@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문/결제 - coopang</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.346.0/lucide.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f0f0f0; }
+    </style>
+</head>
+<body class="pb-20">
+
+<div class="bg-white border-b border-gray-200 py-6 mb-8">
+    <div class="max-w-[1000px] mx-auto px-4 flex justify-between items-end">
+        <div class="flex items-center gap-2">
+            <a href="/products" class="text-[#0073e9] font-bold text-3xl italic tracking-tighter cursor-pointer">
+                <span class="text-[#0073e9]">coo</span><span class="text-[#ff1c1c]">pang</span>
+            </a>
+            <h1 class="text-2xl font-bold ml-4">주문/결제</h1>
+        </div>
+        <div class="flex items-center gap-2 text-[13px] font-bold">
+            <span class="text-[#0073e9]">주문결제 &gt;</span>
+            <span class="text-gray-400">주문완료</span>
+        </div>
+    </div>
+</div>
+
+<form method="post" th:action="@{/checkout/{productId}(productId=${product.id})}">
+    <input type="hidden" name="quantity" value="1">
+    <input type="hidden" name="receiverName" th:value="${order.user.name}">
+    <input type="hidden" name="phoneNumber" th:value="${order.user.phone}">
+    <input type="hidden" name="roadAddress" th:value="${order.user.address}">
+    <input type="hidden" name="detailAddress" value="">
+    <input type="hidden" id="paymentMethodField" name="paymentMethod" value="ECODRIVE_PAY">
+
+    <div class="max-w-[1000px] mx-auto px-4 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+        <div class="flex flex-col gap-6">
+            <div class="bg-white border border-gray-200 rounded-sm p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">배송지 | <span th:text="${order.user.name}">홍길동</span></h2>
+                    <button type="button" class="border border-gray-300 text-[#0073e9] text-[13px] px-3 py-1.5 rounded-sm">배송지 변경</button>
+                </div>
+                <div class="border-t border-gray-50 pt-4 flex flex-col gap-2">
+                    <span class="bg-[#f2f2f2] text-[#666] text-[10px] w-fit px-1.5 py-0.5 rounded-full border border-gray-300">기본배송지</span>
+                    <div class="text-[14px] text-[#222] font-medium" th:text="${order.user.address}">경기도 성남시 분당구 ...</div>
+                    <div class="text-[13px] text-[#555]" th:text="${'휴대폰 : ' + order.user.phone}">휴대폰 : 010-0000-0000</div>
+                </div>
+
+                <div class="border-t border-gray-100 mt-5 pt-4">
+                    <h3 class="text-[15px] font-bold text-[#222] mb-2">배송 요청사항</h3>
+                    <select class="w-full h-10 px-3 border border-gray-300 rounded-sm outline-none text-[14px]">
+                        <option>배송 전에 미리 연락 바랍니다</option>
+                        <option>부재 시 문 앞에 놓아주세요</option>
+                        <option>경비실에 맡겨주세요</option>
+                        <option>택배함에 넣어주세요</option>
+                        <option>직접 입력</option>
+                    </select>
+                    <input type="text" placeholder="요청사항을 입력해 주세요 (선택)" class="mt-2 w-full h-10 px-3 border border-gray-300 rounded-sm outline-none text-[14px]">
+                </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-sm p-6 shadow-sm">
+                <h2 class="text-xl font-bold mb-4">결제수단</h2>
+                <div class="grid grid-cols-1 gap-3">
+                    <label class="flex items-center gap-3 border border-gray-200 rounded-sm px-3 py-3 cursor-pointer hover:border-[#0073e9]">
+                        <input class="payment-method-radio" type="radio" name="paymentMethodUi" value="VIRTUAL_ACCOUNT">
+                        <span class="text-[14px] font-bold">무통장입금(가상계좌)</span>
+                    </label>
+                    <label class="flex items-center gap-3 border border-gray-200 rounded-sm px-3 py-3 cursor-pointer hover:border-[#0073e9]">
+                        <input class="payment-method-radio" type="radio" name="paymentMethodUi" value="CARD">
+                        <span class="text-[14px] font-bold">신용/체크카드</span>
+                    </label>
+                    <label class="flex items-center gap-3 border border-gray-200 rounded-sm px-3 py-3 cursor-pointer hover:border-[#0073e9]">
+                        <input class="payment-method-radio" type="radio" name="paymentMethodUi" value="PHONE">
+                        <span class="text-[14px] font-bold">휴대폰 결제</span>
+                    </label>
+                    <label class="flex items-center gap-3 border-2 border-[#0073e9] bg-[#f5f9ff] rounded-sm px-3 py-3 cursor-pointer">
+                        <input class="payment-method-radio" type="radio" name="paymentMethodUi" value="COOPANG_PAY" checked>
+                        <span class="text-[14px] font-bold text-[#0073e9]">고라니페이</span>
+                    </label>
+                </div>
+                <div id="coopangPayNotice" class="mt-3 ml-1 text-[13px] text-[#0073e9] font-semibold">
+                    매일 오전 12시 선착순 100명에게 3만원 이상 결제시 3000원 할인
+                </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-sm p-6 shadow-sm">
+                <h2 class="text-xl font-bold mb-4">현금영수증</h2>
+                <div class="flex flex-col gap-3">
+                    <label class="flex items-center gap-2 text-[14px]">
+                        <input type="radio" name="cashReceiptUi" checked>
+                        <span>신청 안함</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-[14px]">
+                        <input type="radio" name="cashReceiptUi">
+                        <span>개인소득공제</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-[14px]">
+                        <input type="radio" name="cashReceiptUi">
+                        <span>지출증빙</span>
+                    </label>
+                    <input type="text" placeholder="휴대폰 번호 또는 사업자번호 입력" class="w-full h-10 px-3 border border-gray-300 rounded-sm outline-none text-[14px]">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                <h2 class="text-xl font-bold">배송 1건 중 1</h2>
+                <div class="bg-white border rounded-sm border-gray-200 p-6 flex flex-col gap-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-[#e8f7ed] text-[#0d8f3f] text-[11px] font-bold px-2 py-1 rounded-sm">도착보장</span>
+                            <span class="bg-[#f1f5ff] text-[#346aff] text-[11px] font-bold px-2 py-1 rounded-sm">무료배송</span>
+                        </div>
+                        <span class="text-[12px] text-[#666]">내일(화) 도착 보장</span>
+                    </div>
+
+                    <div th:each="item : ${order.items}" class="flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <img th:src="${item.imageUrl}" class="w-16 h-16 border rounded-sm">
+                            <div class="flex flex-col gap-1">
+                                <div class="text-[14px] font-bold text-[#333]" th:text="${item.name}">상품명</div>
+                                <div class="text-[12px] text-[#888]" th:text="${'수량 ' + item.quantity + '개 / 무료배송'}">수량 1개 / 무료배송</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="relative">
+            <div class="sticky top-24 bg-white border border-gray-200 rounded-sm p-6 shadow-sm">
+                <h3 class="text-xl font-bold mb-6">최종 결제 금액</h3>
+                <div class="flex flex-col gap-3 border-b border-gray-100 pb-6 mb-6">
+                    <div class="flex justify-between text-[13px]">
+                        <span class="text-[#111]">총 상품 가격</span>
+                        <span class="font-bold" th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + '원'">281,000원</span>
+                    </div>
+                    <div class="flex justify-between text-[13px]">
+                        <span class="text-[#111]">배송비</span>
+                        <span class="font-bold">0원</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mb-8">
+                    <span class="font-bold text-[15px]">총 결제 금액</span>
+                    <span class="text-2xl font-extrabold text-[#ae0000]" th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + '원'">281,000원</span>
+                </div>
+                <button type="submit" class="w-full bg-[#346aff] text-white font-bold py-4 rounded-sm text-lg hover:bg-blue-600 transition-colors shadow-md">
+                    결제하기
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    const paymentMethodField = document.getElementById('paymentMethodField');
+    const coopangPayNotice = document.getElementById('coopangPayNotice');
+    const paymentRadios = document.querySelectorAll('.payment-method-radio');
+
+    // 결제수단 선택 처리
+    paymentRadios.forEach((radio) => {
+        radio.addEventListener('change', (event) => {
+            const selected = event.target.value;
+            if (selected === 'COOPANG_PAY') {
+                paymentMethodField.value = 'ECODRIVE_PAY';
+                coopangPayNotice.style.display = 'block';
+            } else {
+                paymentMethodField.value = 'ECODRIVE_PAY';
+                coopangPayNotice.style.display = 'none';
+            }
+            console.info('[마켓] 결제수단 선택', selected);
+        });
+    });
+</script>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>
+

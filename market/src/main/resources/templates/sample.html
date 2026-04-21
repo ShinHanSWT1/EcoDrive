@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문/결제 - Market Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.346.0/lucide.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f0f0f0; }
+    </style>
+</head>
+<body class="pb-20">
+
+<div class="bg-white border-b border-gray-200 py-6 mb-8">
+    <div class="max-w-[1000px] mx-auto px-4 flex justify-between items-end">
+        <div class="flex items-center gap-2">
+            <div class="text-[#0073e9] font-bold text-3xl italic tracking-tighter cursor-pointer">
+                <span class="text-[#0073e9]">cou</span><span class="text-[#ff1c1c]">pang</span>
+            </div>
+            <h1 class="text-2xl font-bold ml-4">주문/결제</h1>
+        </div>
+        <div class="flex items-center gap-2 text-[13px] font-bold">
+            <span class="text-[#0073e9]">주문결제 &gt;</span>
+            <span class="text-gray-400">주문완료</span>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-[1000px] mx-auto px-4 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+    <div class="flex flex-col gap-6">
+        <!-- Shipping Address Section -->
+        <div class="bg-white border border-gray-200 rounded-sm p-6 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">배송지 | <span th:text="${order.user.name}">이예진</span></h2>
+                <button class="border border-gray-300 text-[#0073e9] text-[13px] px-3 py-1.5 rounded-sm">배송지 변경</button>
+            </div>
+            <div class="border-t border-gray-50 pt-4 flex flex-col gap-2">
+                <span class="bg-[#f2f2f2] text-[#666] text-[10px] w-fit px-1.5 py-0.5 rounded-full border border-gray-300">기본배송지</span>
+                <div class="text-[14px] text-[#222] font-medium" th:text="${order.user.address}">경기도 성남시 분당구 ...</div>
+                <div class="text-[13px] text-[#555]" th:text="'휴대폰 : ' + ${order.user.phone}">휴대폰 : 010-0000-0000</div>
+            </div>
+        </div>
+
+        <!-- Payment Section -->
+        <div class="bg-white border border-gray-200 rounded-sm p-6 shadow-sm">
+            <h2 class="text-xl font-bold mb-4">결제수단</h2>
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-5 h-5 rounded-full border-2 border-[#0073e9] flex items-center justify-center">
+                        <div class="w-2 h-2 rounded-full bg-[#0073e9]"></div>
+                    </div>
+                    <span class="text-[14px] font-bold">무통장입금(가상계좌)</span>
+                </div>
+                <div class="ml-8 flex flex-col gap-4">
+                    <select class="w-full h-10 px-3 border border-gray-300 rounded-sm outline-none text-[14px]">
+                        <option th:each="bank : ${bankList}" th:value="${bank.code}" th:text="${bank.name}">신한은행</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Detail -->
+        <div class="flex flex-col gap-4">
+            <h2 class="text-xl font-bold">배송 1건 중 1</h2>
+            <div class="bg-white border rounded-sm border-gray-200 p-6 flex flex-col gap-4">
+                <div th:each="item : ${order.items}" class="flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <img th:src="${item.imageUrl}" class="w-16 h-16 border rounded-sm">
+                        <div class="flex flex-col gap-1">
+                            <div class="text-[14px] font-bold text-[#333]" th:text="${item.name}">상품명</div>
+                            <div class="text-[12px] text-[#888]" th:text="'수량 ' + ${item.quantity} + '개 / 무료배송'">수량 1개</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Sidebar -->
+    <div class="relative">
+        <div class="sticky top-24 bg-white border border-gray-200 rounded-sm p-6 shadow-sm">
+            <h3 class="text-xl font-bold mb-6">최종 결제 금액</h3>
+            <div class="flex flex-col gap-3 border-b border-gray-100 pb-6 mb-6">
+                <div class="flex justify-between text-[13px]">
+                    <span class="text-[#111]">총 상품 가격</span>
+                    <span class="font-bold" th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + '원'">281,000원</span>
+                </div>
+                <div class="flex justify-between text-[13px]">
+                    <span class="text-[#111]">배송비</span>
+                    <span class="font-bold">0원</span>
+                </div>
+            </div>
+            <div class="flex justify-between items-center mb-8">
+                <span class="font-bold text-[15px]">총 결제 금액</span>
+                <span class="text-2xl font-extrabold text-[#ae0000]" th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + '원'">281,000원</span>
+            </div>
+            <button class="w-full bg-[#346aff] text-white font-bold py-4 rounded-sm text-lg hover:bg-blue-600 transition-colors shadow-md">
+                결제하기
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

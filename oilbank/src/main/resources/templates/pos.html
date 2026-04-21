@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신한오일뱅크 POS</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #111b31;
+            --panel2: #162644;
+            --line: #263a61;
+            --text: #e5edf9;
+            --muted: #9eb0cf;
+            --ok: #22c55e;
+            --bad: #f43f5e;
+            --brand: #1a8cff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background:
+                    radial-gradient(circle at 8% 10%, #1f3f73 0%, transparent 30%),
+                    radial-gradient(circle at 92% 85%, #14405f 0%, transparent 32%),
+                    var(--bg);
+            color: var(--text);
+            font-family: "Pretendard", "Noto Sans KR", sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .layout { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
+        .panel {
+            background: linear-gradient(180deg, var(--panel) 0%, var(--panel2) 100%);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+        }
+        .title { margin: 0 0 12px; font-size: 24px; font-weight: 800; letter-spacing: 0.3px; }
+        .subtitle { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+        .status-box { margin-bottom: 12px; padding: 10px 12px; border-radius: 10px; font-size: 14px; }
+        .status-box.ok { background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.35); color: #b7f5cb; }
+        .status-box.bad { background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(244, 63, 94, 0.35); color: #ffc2d0; }
+
+        .section-label { margin: 22px 0 10px; font-size: 13px; color: #9fb2d3; font-weight: 700; }
+        .section-block { margin-bottom: 14px; }
+        .fuel-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .mode-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .option-card {
+            border: 1px solid #2b4679;
+            border-radius: 10px;
+            background: #112444;
+            padding: 12px;
+            cursor: pointer;
+            transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+        }
+        .option-card:hover { transform: translateY(-1px); border-color: #4ea3ff; }
+        .option-card input { display: none; }
+        .option-card .name { font-size: 16px; font-weight: 700; margin: 0 0 4px; }
+        .option-card .desc { font-size: 12px; color: var(--muted); margin: 0; }
+        .option-card input:checked + .name,
+        .option-card input:checked + .name + .desc { color: #d8ecff; }
+        .option-card:has(input:checked) {
+            border-color: #4ea3ff;
+            background: #183766;
+            box-shadow: inset 0 0 0 1px rgba(78, 163, 255, 0.25);
+        }
+
+        .field-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+        .input {
+            width: 100%;
+            border: 1px solid #355386;
+            border-radius: 10px;
+            background: #0f1f3b;
+            color: var(--text);
+            padding: 10px 11px;
+            font-size: 14px;
+        }
+        .quick-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+        .quick-btn {
+            border: 1px solid #365585;
+            background: #13294f;
+            color: #d9e9ff;
+            border-radius: 10px;
+            padding: 10px 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .quick-btn:hover { border-color: #4ea3ff; background: #1b3f77; }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 11px 14px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+        .btn-main { background: linear-gradient(135deg, #1a8cff, #0c63f3); width: 100%; margin-top: 14px; padding: 13px 16px; font-size: 16px; }
+        .btn-sub { background: #263a61; }
+        .btn-pay { background: linear-gradient(135deg, #12b886, #0f9f75); width: 100%; margin-top: 10px; padding: 13px 16px; font-size: 16px; }
+
+        .order-list { margin-top: 12px; max-height: 240px; overflow: auto; border-top: 1px solid #2a416b; padding-top: 10px; }
+        .order-item {
+            display: block;
+            text-decoration: none;
+            color: var(--text);
+            background: #0f213f;
+            border: 1px solid #2f4a79;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+        .order-item.active { border-color: #38bdf8; background: #16335f; }
+        .order-top { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+        .order-name { font-size: 15px; font-weight: 700; margin: 5px 0; color: #d8e7ff; }
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+        .chip-ready { background: rgba(59, 130, 246, 0.22); color: #a5cbff; }
+        .chip-pending { background: rgba(245, 158, 11, 0.2); color: #ffd693; }
+        .chip-paid { background: rgba(34, 197, 94, 0.18); color: #b7f5cb; }
+        .chip-failed { background: rgba(244, 63, 94, 0.2); color: #ffc2d0; }
+
+        .detail-card {
+            border: 1px solid #2f4a79;
+            border-radius: 12px;
+            background: #102344;
+            padding: 14px;
+            margin-top: 10px;
+        }
+        .detail-row { display: flex; justify-content: space-between; margin: 6px 0; font-size: 14px; }
+        .detail-row strong { color: #f1f6ff; }
+
+        .tiny { margin: 0; font-size: 12px; color: var(--muted); word-break: break-all; }
+        .empty { color: var(--muted); font-size: 14px; text-align: center; margin-top: 16px; }
+        .hidden { display: none; }
+        .scan-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.8);
+            z-index: 9999;
+            padding: 20px;
+        }
+        .scan-card {
+            width: 100%;
+            max-width: 520px;
+            border-radius: 12px;
+            border: 1px solid #2f4a79;
+            background: #102344;
+            padding: 14px;
+        }
+        .scan-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .scan-video {
+            width: 100%;
+            border-radius: 10px;
+            background: #081325;
+            border: 1px solid #2f4a79;
+        }
+        .scan-reader {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #2f4a79;
+            background: #081325;
+            margin-top: 8px;
+        }
+        .scan-help {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+        .result-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.8);
+            z-index: 10000;
+            padding: 20px;
+        }
+        .result-card {
+            width: 100%;
+            max-width: 420px;
+            border-radius: 12px;
+            border: 1px solid #2f4a79;
+            background: #102344;
+            padding: 18px;
+            text-align: center;
+        }
+        .result-title {
+            margin: 0 0 10px;
+            font-size: 20px;
+            font-weight: 800;
+            color: #eaf2ff;
+        }
+        .result-message {
+            margin: 0;
+            color: #c8d6ef;
+            font-size: 14px;
+        }
+        @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <section class="panel">
+        <h1 class="title">신한오일뱅크 POS</h1>
+        <p class="subtitle">연료 선택 -> 기준 선택 -> 값 입력/선택 -> 확인</p>
+
+        <div th:if="${successMessage}" class="status-box ok" th:text="${successMessage}">완료</div>
+        <div th:if="${errorMessage}" class="status-box bad" th:text="${errorMessage}">오류</div>
+
+        <form th:action="@{/pos/orders}" method="post" th:object="${createOrderForm}">
+            <div class="section-block">
+                <p class="section-label">1) 연료 선택</p>
+                <div class="fuel-grid">
+                <label class="option-card">
+                    <input type="radio" th:field="*{productId}" value="1" />
+                    <p class="name">휘발유</p>
+                    <p class="desc">L당 1,996원</p>
+                </label>
+                <label class="option-card">
+                    <input type="radio" th:field="*{productId}" value="2" />
+                    <p class="name">경유</p>
+                    <p class="desc">L당 1,923원</p>
+                </label>
+                </div>
+            </div>
+
+            <div class="section-block">
+                <p class="section-label">2) 기준 선택</p>
+                <div class="mode-grid">
+                <label class="option-card">
+                    <input type="radio" th:field="*{pricingMode}" value="LITER" />
+                    <p class="name">리터 기준</p>
+                    <p class="desc">몇 L 주입할지 선택</p>
+                </label>
+                <label class="option-card">
+                    <input type="radio" th:field="*{pricingMode}" value="AMOUNT" />
+                    <p class="name">금액 기준</p>
+                    <p class="desc">몇 만원 주입할지 선택</p>
+                </label>
+                </div>
+            </div>
+
+            <div id="literBox">
+                <p class="section-label">3) 리터 입력 또는 빠른 선택</p>
+                <div class="field-row">
+                    <input id="literInput" class="input" type="number" min="1" th:field="*{liters}" placeholder="주입할 L 입력" />
+                </div>
+                <div class="quick-grid">
+                    <button type="button" class="quick-btn liter-quick" data-value="3">3L</button>
+                    <button type="button" class="quick-btn liter-quick" data-value="5">5L</button>
+                    <button type="button" class="quick-btn liter-quick" data-value="10">10L</button>
+                </div>
+            </div>
+
+            <div id="amountBox" class="hidden">
+                <p class="section-label">3) 금액 입력 또는 빠른 선택</p>
+                <div class="field-row">
+                    <input id="amountInput" class="input" type="number" min="1000" step="1000" th:field="*{amountWon}" placeholder="주입할 금액(원) 입력" />
+                </div>
+                <div class="quick-grid">
+                    <button type="button" class="quick-btn amount-quick" data-value="10000">10,000원</button>
+                    <button type="button" class="quick-btn amount-quick" data-value="30000">30,000원</button>
+                    <button type="button" class="quick-btn amount-quick" data-value="50000">50,000원</button>
+                </div>
+            </div>
+
+            <button class="btn btn-main" type="submit">확인</button>
+        </form>
+
+        <div class="order-list">
+            <a
+                    th:each="order : ${orders}"
+                    th:href="@{/pos(orderId=${order.id})}"
+                    class="order-item"
+                    th:classappend="${selectedOrder != null and selectedOrder.id == order.id} ? 'active' : ''">
+                <div class="order-top">
+                    <span th:text="${#temporals.format(order.createdAt, 'HH:mm:ss')}">10:20:00</span>
+                    <span
+                            class="status-chip"
+                            th:classappend="${order.status.name() == 'READY'} ? 'chip-ready' :
+                                            (${order.status.name() == 'PENDING'} ? 'chip-pending' :
+                                            (${order.status.name() == 'PAID'} ? 'chip-paid' : 'chip-failed'))"
+                            th:text="${order.status.name()}">READY</span>
+                </div>
+                <p class="order-name" th:text="${order.product.name}">휘발유</p>
+                <div class="order-top">
+                    <span th:text="${order.externalOrderId}">OIL-1001</span>
+                    <span th:text="${order.pricingMode == T(com.gorani.oilbank.domain.OilbankPricingMode).LITER ? ('리터 ' + order.requestedLiters + 'L') : ('금액 ' + #numbers.formatInteger(order.requestedAmount, 3, 'COMMA') + '원')}">리터 10L</span>
+                </div>
+            </a>
+            <p class="empty" th:if="${#lists.isEmpty(orders)}">주문 내역 없음</p>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2 class="title" style="font-size:22px;">결제 상세</h2>
+        <p class="subtitle">고객 폰에서 QR을 스캔해 페이 결제를 진행합니다</p>
+
+        <div th:if="${selectedOrder == null}" class="empty">주문을 먼저 선택하세요</div>
+
+        <div th:if="${selectedOrder != null}">
+            <div class="detail-card">
+                <div class="detail-row"><span>주문 번호</span><strong th:text="${selectedOrder.id}">2001</strong></div>
+                <div class="detail-row"><span>외부 주문 ID</span><strong th:text="${selectedOrder.externalOrderId}">OIL-2001</strong></div>
+                <div class="detail-row"><span>상품명</span><strong th:text="${selectedOrder.product.name}">휘발유</strong></div>
+                <div class="detail-row"><span>단가</span><strong th:text="${'L당 ' + #numbers.formatInteger(selectedOrder.product.price, 3, 'COMMA') + '원'}">L당 1,996원</strong></div>
+                <div class="detail-row"><span>주입 기준</span><strong th:text="${selectedOrder.pricingMode == T(com.gorani.oilbank.domain.OilbankPricingMode).LITER ? ('리터 ' + selectedOrder.requestedLiters + 'L') : ('금액 ' + #numbers.formatInteger(selectedOrder.requestedAmount, 3, 'COMMA') + '원')}">리터 10L</strong></div>
+                <div class="detail-row"><span>원 금액</span><strong th:text="${#numbers.formatInteger(selectedOrder.originalAmount, 3, 'COMMA') + '원'}">18,000원</strong></div>
+                <div class="detail-row"><span>쿠폰 할인</span><strong th:text="${#numbers.formatInteger(selectedOrder.appliedCouponAmount == null ? 0 : selectedOrder.appliedCouponAmount, 3, 'COMMA') + '원'}">0원</strong></div>
+                <div class="detail-row"><span>최종 결제 금액</span><strong style="color:#7fdaff;" th:text="${#numbers.formatInteger(selectedOrder.finalAmount(), 3, 'COMMA') + '원'}">18,000원</strong></div>
+                <div class="detail-row"><span>상태</span><strong id="liveStatus" th:text="${selectedOrder.status.name()}">READY</strong></div>
+            </div>
+
+            <form th:action="@{/pos/orders/{id}/coupon/apply(id=${selectedOrder.id})}" th:object="${couponApplyForm}" method="post" class="field-row">
+                <input class="input" type="text" th:field="*{couponCode}" placeholder="쿠폰 바코드 또는 QR 문자열 입력" />
+                <button class="btn btn-sub" type="submit">쿠폰 적용</button>
+                <button id="openCouponScan" class="btn btn-sub" type="button">쿠폰 QR 스캔</button>
+            </form>
+            <p class="tiny">스캐너 권장 방식: 입력창에 코드 입력 후 Enter 전송</p>
+
+            <form id="payQrForm" th:action="@{/pos/orders/{id}/pay/qr(id=${selectedOrder.id})}" method="post" target="payCheckoutPopup">
+                <button class="btn btn-pay" type="submit">QR 결제 시작</button>
+            </form>
+        </div>
+    </section>
+</div>
+
+<div id="couponScanModal" class="scan-modal">
+    <div class="scan-card">
+        <div class="scan-head">
+            <strong>쿠폰 QR/바코드 스캔</strong>
+            <button id="closeCouponScan" class="btn btn-sub" type="button">닫기</button>
+        </div>
+        <video id="couponScanVideo" class="scan-video hidden" autoplay playsinline muted></video>
+        <div id="couponScanReader" class="scan-reader hidden"></div>
+        <p class="scan-help">카메라에 쿠폰 QR 또는 바코드를 비추면 자동으로 입력됩니다.</p>
+    </div>
+</div>
+
+<div id="paymentResultModal" class="result-modal">
+    <div class="result-card">
+        <h3 id="resultTitle" class="result-title">결제 완료</h3>
+        <p id="resultMessage" class="result-message">결제가 완료되었습니다.</p>
+        <button id="closeResultModal" class="btn btn-pay" type="button" style="margin-top:14px;">확인</button>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script th:inline="javascript">
+    const selectedOrderId = /*[[${selectedOrder != null ? selectedOrder.id : null}]]*/ null;
+    const selectedOrderStatus = /*[[${selectedOrder != null ? selectedOrder.status.name() : null}]]*/ null;
+
+    const pricingModeRadios = document.querySelectorAll('input[name="pricingMode"]');
+    const literBox = document.getElementById('literBox');
+    const amountBox = document.getElementById('amountBox');
+    const literInput = document.getElementById('literInput');
+    const amountInput = document.getElementById('amountInput');
+    const couponInput = document.querySelector('input[name="couponCode"]');
+
+    const scanModal = document.getElementById('couponScanModal');
+    const openCouponScan = document.getElementById('openCouponScan');
+    const closeCouponScan = document.getElementById('closeCouponScan');
+    const scanVideo = document.getElementById('couponScanVideo');
+    const scanReader = document.getElementById('couponScanReader');
+    const paymentResultModal = document.getElementById('paymentResultModal');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultMessage = document.getElementById('resultMessage');
+    const closeResultModal = document.getElementById('closeResultModal');
+    let scanStream = null;
+    let scanTimer = null;
+    let html5Scanner = null;
+    let paymentPollTimer = null;
+    let pendingRedirectOrderId = null;
+
+    function selectedPricingMode() {
+        const checked = Array.from(pricingModeRadios).find(r => r.checked);
+        return checked ? checked.value : 'LITER';
+    }
+
+    function syncPricingInput() {
+        if (selectedPricingMode() === 'AMOUNT') {
+            literBox.classList.add('hidden');
+            amountBox.classList.remove('hidden');
+        } else {
+            amountBox.classList.add('hidden');
+            literBox.classList.remove('hidden');
+        }
+    }
+
+    pricingModeRadios.forEach(radio => radio.addEventListener('change', syncPricingInput));
+    syncPricingInput();
+
+    document.querySelectorAll('.liter-quick').forEach(button => {
+        button.addEventListener('click', function () {
+            literInput.value = this.dataset.value;
+        });
+    });
+    document.querySelectorAll('.amount-quick').forEach(button => {
+        button.addEventListener('click', function () {
+            amountInput.value = this.dataset.value;
+        });
+    });
+
+    function stopScan() {
+        if (scanTimer) {
+            clearInterval(scanTimer);
+            scanTimer = null;
+        }
+        if (scanStream) {
+            scanStream.getTracks().forEach(track => track.stop());
+            scanStream = null;
+        }
+        scanVideo.srcObject = null;
+        scanVideo.classList.add('hidden');
+
+        if (html5Scanner) {
+            html5Scanner.stop()
+                .then(() => html5Scanner.clear())
+                .catch(() => {})
+                .finally(() => {
+                    html5Scanner = null;
+                });
+        }
+        if (scanReader) {
+            scanReader.classList.add('hidden');
+            scanReader.innerHTML = '';
+        }
+    }
+
+    function showPaymentResultModal(status, orderId) {
+        pendingRedirectOrderId = orderId;
+        if (!paymentResultModal || !resultTitle || !resultMessage) {
+            window.location.href = '/pos?orderId=' + orderId;
+            return;
+        }
+        if (status === 'PAID' || status === 'COMPLETED') {
+            resultTitle.textContent = '결제 완료';
+            resultMessage.textContent = '결제가 완료되었습니다.';
+        } else {
+            resultTitle.textContent = '결제 실패';
+            resultMessage.textContent = '결제에 실패했습니다.';
+        }
+        paymentResultModal.style.display = 'flex';
+    }
+
+    async function startScanWithBarcodeDetector() {
+        scanVideo.classList.remove('hidden');
+        if (!window.isSecureContext) {
+            alert('카메라 스캔은 HTTPS 또는 localhost 환경에서만 동작합니다.');
+            return;
+        }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('현재 브라우저는 카메라 접근을 지원하지 않습니다.');
+            return;
+        }
+        if (!window.BarcodeDetector) {
+            alert('현재 브라우저는 QR/바코드 스캔(BarcodeDetector)을 지원하지 않습니다.');
+            return;
+        }
+
+        const supportedFormats = await BarcodeDetector.getSupportedFormats().catch(() => []);
+        const preferredFormats = ['qr_code', 'code_128', 'ean_13'];
+        const formats = preferredFormats.filter(format => supportedFormats.includes(format));
+        if (formats.length === 0) {
+            alert('현재 브라우저에서 사용할 수 있는 QR/바코드 포맷이 없습니다.');
+            return;
+        }
+
+        const detector = new BarcodeDetector({formats: formats});
+        scanStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' },
+            audio: false
+        });
+        scanVideo.srcObject = scanStream;
+        scanModal.style.display = 'flex';
+
+        scanTimer = setInterval(async function () {
+            try {
+                const codes = await detector.detect(scanVideo);
+                if (codes && codes.length > 0 && codes[0].rawValue) {
+                    couponInput.value = codes[0].rawValue;
+                    stopScan();
+                    scanModal.style.display = 'none';
+                }
+            } catch (e) {
+                // no-op
+            }
+        }, 250);
+    }
+
+    async function startScanWithHtml5Qrcode() {
+        if (!window.Html5Qrcode) {
+            alert('현재 브라우저는 QR/바코드 스캔을 지원하지 않습니다.');
+            return;
+        }
+        scanReader.classList.remove('hidden');
+        html5Scanner = new Html5Qrcode('couponScanReader');
+        await html5Scanner.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 240, height: 240 } },
+            function (decodedText) {
+                couponInput.value = decodedText;
+                stopScan();
+                scanModal.style.display = 'none';
+            },
+            function () {
+                // no-op
+            }
+        );
+    }
+
+    async function startScan() {
+        scanModal.style.display = 'flex';
+        if (window.BarcodeDetector) {
+            await startScanWithBarcodeDetector();
+            return;
+        }
+        await startScanWithHtml5Qrcode();
+    }
+
+    if (openCouponScan && closeCouponScan && scanVideo && scanReader && couponInput) {
+        openCouponScan.addEventListener('click', async function () {
+            try {
+                await startScan();
+            } catch (e) {
+                stopScan();
+                scanModal.style.display = 'none';
+                alert('카메라 실행에 실패했습니다. 카메라 권한과 브라우저 설정을 확인하세요.');
+            }
+        });
+
+        closeCouponScan.addEventListener('click', function () {
+            stopScan();
+            scanModal.style.display = 'none';
+        });
+    }
+
+    function startPaymentStatusPolling(orderId) {
+        if (!orderId) {
+            return;
+        }
+        if (paymentPollTimer) {
+            return;
+        }
+        paymentPollTimer = setInterval(async function () {
+            const response = await fetch('/api/orders/' + orderId);
+            if (!response.ok) {
+                return;
+            }
+            const data = await response.json();
+            const liveStatus = document.getElementById('liveStatus');
+            if (liveStatus) {
+                liveStatus.textContent = data.status;
+            }
+            if (data.status === 'PAID') {
+                clearInterval(paymentPollTimer);
+                paymentPollTimer = null;
+                showPaymentResultModal('PAID', orderId);
+                return;
+            }
+            if (data.status === 'FAILED') {
+                clearInterval(paymentPollTimer);
+                paymentPollTimer = null;
+                showPaymentResultModal('FAILED', orderId);
+                return;
+            }
+            if (data.status !== 'PENDING' && data.status !== 'READY') {
+                clearInterval(paymentPollTimer);
+                paymentPollTimer = null;
+                window.location.href = '/pos?orderId=' + orderId;
+            }
+        }, 1200);
+    }
+    if (selectedOrderId && selectedOrderStatus === 'PENDING') {
+        startPaymentStatusPolling(selectedOrderId);
+    }
+
+    window.addEventListener('message', function (event) {
+        const data = event.data;
+        if (!data || data.source !== 'gorani-pay' || data.type !== 'PAYMENT_RESULT') {
+            return;
+        }
+        if (selectedOrderId && data.orderId && !String(data.orderId).includes(String(selectedOrderId))) {
+            return;
+        }
+        if (data.status === 'COMPLETED') {
+            showPaymentResultModal('COMPLETED', selectedOrderId);
+        } else if (data.status === 'FAILED') {
+            showPaymentResultModal('FAILED', selectedOrderId);
+        }
+    });
+
+    const payQrForm = document.getElementById('payQrForm');
+    if (payQrForm) {
+        payQrForm.addEventListener('submit', function () {
+            const liveStatus = document.getElementById('liveStatus');
+            if (liveStatus) {
+                liveStatus.textContent = 'PENDING';
+            }
+            if (selectedOrderId) {
+                startPaymentStatusPolling(selectedOrderId);
+            }
+        });
+    }
+
+    if (closeResultModal) {
+        closeResultModal.addEventListener('click', function () {
+            paymentResultModal.style.display = 'none';
+            if (pendingRedirectOrderId) {
+                window.location.href = '/pos?orderId=' + pendingRedirectOrderId;
+            } else {
+                window.location.reload();
+            }
+        });
+    }
+</script>
+</body>
+</html>

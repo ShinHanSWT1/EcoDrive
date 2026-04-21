@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문 결과 - coopang</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Pretendard', sans-serif; background: #f5f7f6; color: #0f172a; }
+    </style>
+</head>
+<body>
+<header class="border-b border-slate-200 bg-white py-6">
+    <div class="mx-auto flex max-w-[900px] items-end justify-between px-4">
+        <a href="/products" class="text-3xl font-black tracking-tight text-[#143D60]">coopang</a>
+        <span class="text-sm font-bold text-[#27667B]">주문완료</span>
+    </div>
+</header>
+
+<main class="mx-auto max-w-[900px] px-4 py-10">
+    <section class="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
+        <h1 class="text-2xl font-black text-slate-900">주문 결과</h1>
+        <p class="mt-1 text-sm text-slate-500">결제 상태를 확인해 주세요.</p>
+
+        <div class="mt-6 space-y-2 text-sm">
+            <div class="flex justify-between border-b border-slate-100 py-2"><span>주문번호</span><strong th:text="${order.id}">1001</strong></div>
+            <div class="flex justify-between border-b border-slate-100 py-2"><span>상품명</span><strong th:text="${order.product.name()}">상품명</strong></div>
+            <div class="flex justify-between border-b border-slate-100 py-2"><span>결제 금액</span><strong th:text="${#numbers.formatInteger(order.totalAmount, 3, 'COMMA') + '원'}">0원</strong></div>
+            <div class="flex justify-between border-b border-slate-100 py-2">
+                <span>최종 상태</span>
+                <strong class="text-[#143D60]" th:text="${order.status}">PAID</strong>
+            </div>
+            <div class="flex justify-between border-b border-slate-100 py-2" th:if="${order.failReason != null}">
+                <span>실패 사유</span>
+                <strong class="text-red-600" th:text="${order.failReason}">결제 실패</strong>
+            </div>
+        </div>
+
+        <a href="/products" class="mt-7 inline-flex rounded-lg bg-[#27667B] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#143D60]">
+            상품 목록으로 이동
+        </a>
+    </section>
+</main>
+</body>
+</html>
