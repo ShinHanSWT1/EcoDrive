@@ -38,7 +38,7 @@ public class GoraniPayCheckoutClient {
                 null,
                 order.getExternalOrderId(),
                 order.getProduct().name(),
-                order.finalAmount(),
+                order.getOriginalAmount(),
                 0,
                 order.getAppliedCouponAmount() == null ? 0 : order.getAppliedCouponAmount(),
                 null,
@@ -53,8 +53,11 @@ public class GoraniPayCheckoutClient {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set(INTERNAL_TOKEN_HEADER, internalToken);
 
-        log.info("[Oilbank] 고라니페이 세션 생성 요청. externalOrderId={}, amount={}",
-                order.getExternalOrderId(), order.finalAmount());
+        log.info("[Oilbank] 고라니페이 세션 생성 요청. externalOrderId={}, originalAmount={}, couponDiscountAmount={}, finalAmount={}",
+                order.getExternalOrderId(),
+                order.getOriginalAmount(),
+                order.getAppliedCouponAmount() == null ? 0 : order.getAppliedCouponAmount(),
+                order.finalAmount());
         ResponseEntity<GoraniCheckoutSessionResponse> response = restTemplate.postForEntity(
                 goraniPayBaseUrl + "/pay/checkout/sessions",
                 new HttpEntity<>(request, headers),
@@ -62,7 +65,7 @@ public class GoraniPayCheckoutClient {
         );
 
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-            throw new IllegalStateException("고라니페이 checkout session 생성 실패");
+            throw new IllegalStateException("怨좊씪?덊럹??checkout session ?앹꽦 ?ㅽ뙣");
         }
         return response.getBody();
     }
